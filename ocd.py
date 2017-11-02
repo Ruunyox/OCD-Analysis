@@ -1,7 +1,13 @@
 from curses import *
 import numpy as np
 import matplotlib as mpl
+import sys
 
+if sys.platform == "linux" or sys.platform == "darwin"
+	try:
+		import curses
+	except:
+		print("Curses module not found. Defaulting to CLI.")
 
 class ocd_spec:
 	def renorm(self,scale_factor):
