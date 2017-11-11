@@ -1,9 +1,17 @@
-from curses import *
+# -*- coding: utf-8 -*-
+'''
+ ┌┬──────────────────────────────────┬┐
+ └┤   OCD ANALYSIS SOFTWARE          ├┘
+ ┌┤   Nick Charron - Huang Lab       ├┐
+ └┤   Rice Univ - 2017               ├┘
+ ┌┤   charron.nicholas.e@gmail.com   ├┐
+ └┴──────────────────────────────────┴┘
+'''
 import numpy as np
-import matplotlib as mpl
+import matplotlib.pyplot as plt
 import sys
 
-if sys.platform == "linux" or sys.platform == "darwin"
+if sys.platform == "linux" or sys.platform == "darwin":
 	try:
 		import curses
 	except:
@@ -11,11 +19,14 @@ if sys.platform == "linux" or sys.platform == "darwin"
 
 class ocd_spec:
 	def renorm(self,scale_factor):
-		self.cd = scale_factor*self.cd	
+		self.cd = scale_factor*self.cd
 
 	def load(self,fn):
-		data = np.loadtxt(fn,dtype=float,skiprows=19,usecols=(0,1,2))	
-		return data	
+		data = np.loadtxt(fn,dtype=float,skiprows=19,usecols=(0,1,2))
+		return data
+
+	def name(self,string):
+		self.name = string
 
 	def __add__(self,new):
 		new_ocd_spec = ocd_spec()
@@ -24,8 +35,8 @@ class ocd_spec:
 			cd = np.append(cd,i+j)
 		new_ocd_spec.cd = cd
 		new_ocd_spec.wl = self.wl
-		return new_ocd_spec			
-		
+		return new_ocd_spec
+
 	def __radd__(self,other):
 		if other == 0:
 			return self
@@ -42,6 +53,13 @@ class ocd_spec:
 			self.wl = np.array([])
 			self.cd = np.array([])
 
+	def graph(self):
+		fig = plt.figure("CD Spectrum")
+		plt.plot(self.wl, self.cd, 'k')
+		plt.ylabel("CD [mdeg]")
+		plt.xlabel("Wavelength [nm]")
+		plt.show()
+
 def avg_signal(specs):
 	'''input is array of ocd_spec'''
 	cd = np.zeros(len(specs[0].cd))
@@ -52,6 +70,31 @@ def avg_signal(specs):
 	avg = ocd_spec()
 	avg.cd = cd
 	avg.wl = specs[0].wl
-	return avg 
+	return avg
 
-
+def mult_graph(specs,types=None,colors=None,title=None):
+	fig = plt.figure("Composite Plot")
+	plt.title(title)
+	plt.xlabel("Wavelength [nm]")
+	plt.ylabel("CD [mdeg]")
+	if types != None and colors == None:
+		names=[]
+		for i,j in zip(specs,types):
+			plt.plot(i.wl,i.cd,j)
+			names.append(i.name)
+		plt.legend(names,loc="best")
+		plt.show()
+	if types != None and colors != None:
+		names=[]
+		for i,j,k in zip(specs,types,colors):
+			plt.plot(i.wl,i.cd,j,color=k)
+			names.append(i.name)
+		plt.legend(names,loc="best")
+		plt.show()
+	if types == None and colors == None:
+		names=[]
+		for i in specs:
+			plt.plot(i.wl,i.cd)
+			names.append(i.name)
+		plt.legend(names,loc="best")
+		plt.show()
