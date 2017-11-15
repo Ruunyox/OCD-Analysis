@@ -8,25 +8,19 @@
  └┴──────────────────────────────────┴┘
 '''
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import sys
-
-if sys.platform == "linux" or sys.platform == "darwin":
-	try:
-		import curses
-	except:
-		print("Curses module not found. Defaulting to CLI.")
+import os
 
 class ocd_spec:
 	def renorm(self,scale_factor):
 		self.cd = scale_factor*self.cd
 
 	def load(self,fn):
+		'''Specific to J810 ASCII'''
 		data = np.loadtxt(fn,dtype=float,skiprows=19,usecols=(0,1,2))
 		return data
-
-	def name(self,string):
-		self.name = string
 
 	def __add__(self,new):
 		new_ocd_spec = ocd_spec()
@@ -46,8 +40,10 @@ class ocd_spec:
 	def __init__(self,fn=None):
 		if fn is not None:
 			self.data = self.load(fn)
+			'''Reverse Data'''
 			self.wl = np.flipud(np.array(self.data[:,0]))
 			self.cd = np.flipud(np.array(self.data[:,1]))
+			self.name = fn
 		if fn is None:
 			self.data = np.array([[]])
 			self.wl = np.array([])
@@ -72,7 +68,7 @@ def avg_signal(specs):
 	avg.wl = specs[0].wl
 	return avg
 
-def mult_graph(specs,types=None,colors=None,title=None):
+def mult_graph(specs,types=None,colors=None,widths=None,title=None):
 	fig = plt.figure("Composite Plot")
 	plt.title(title)
 	plt.xlabel("Wavelength [nm]")
@@ -98,3 +94,51 @@ def mult_graph(specs,types=None,colors=None,title=None):
 			names.append(i.name)
 		plt.legend(names,loc="best")
 		plt.show()
+		
+def graph_series(specs,title=None,cmap=mpl.cm.Reds):
+	fig = plt.figure("Series Plot")
+	plt.title(title)
+	plt.xlabel("Wavelength [nm]")
+	plt.ylabel("CD [mdeg]")
+	names=[]
+	for i in range(len(specs)):
+		plt.plot(specs[i].wl,specs[i].cd,color=cmap((i+1)*1./len(specs)))
+		names.append(specs[i].name)
+	plt.legend(names,loc="best")
+	plt.show()
+
+if sys.platform == "win32":
+	try:
+		import wx
+
+		def get_path():
+			app = wx.App(None)
+			style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
+			dialog = wx.FileDialog(None, 'Open',wildcard='*.txt',style=style)
+			if dialog.ShowModal() == wx.ID_OK:
+				path = dialog.GetPath()
+			else:
+				path = None
+			dialog.Destroy()
+			return path
+
+	except:
+		print("WX module not found. Defaulting to CLI.")
+	
+if sys.platform == "linux" or sys.platform == "darwin" \
+or sys.platform == "linux2":
+	try:
+		from dialog import Dialog
+		dlg = Dialog(dialog="dialog")
+		
+		def fs():
+			rows, cols = os.popen("stty size","r").read().split()
+			rows = int(rows); cols = int(cols)
+			path = './'
+			code, path = dlg.fselect('./',rows-30,cols-30,title="Select File")
+			os.system("clear")
+			print(path + " loaded.")
+			return ocd_spec(path)
+	except:
+		print("Dialog module not found. Defaulting to CLI.")
+		
