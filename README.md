@@ -8,6 +8,7 @@ Function and class documentation is included in PDF form.
 
 #### Linux/OSX:
 * curses >> terminal-based file selection
+* pydialog >> terminal-based file selection
 * numpy
 
 #### Windows:
