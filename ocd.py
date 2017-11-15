@@ -31,6 +31,20 @@ class ocd_spec:
 		new_ocd_spec.wl = self.wl
 		return new_ocd_spec
 
+	def __sub__(self,new):
+		new_ocd_spec = ocd_spec()
+		cd = np.array([])
+		for i,j, in zip(self.cd,new.cd):
+			cd = np.append(cd,i-j)
+		new_ocd_spec.cd = cd
+		new_ocd_spec.wl = self.wl
+
+	def __rsub__(self,other):
+		if other == 0:
+			return self
+		else:
+			return self.__sub__(other)
+
 	def __radd__(self,other):
 		if other == 0:
 			return self
@@ -48,6 +62,7 @@ class ocd_spec:
 			self.data = np.array([[]])
 			self.wl = np.array([])
 			self.cd = np.array([])
+			self.name = "empty spectrum"
 
 	def graph(self):
 		fig = plt.figure("CD Spectrum")
@@ -111,7 +126,7 @@ if sys.platform == "win32":
 	try:
 		import wx
 
-		def get_path():
+		def fs():
 			app = wx.App(None)
 			style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
 			dialog = wx.FileDialog(None, 'Open',wildcard='*.txt',style=style)
@@ -120,7 +135,7 @@ if sys.platform == "win32":
 			else:
 				path = None
 			dialog.Destroy()
-			return path
+			return ocd_spec(path)
 
 	except:
 		print("WX module not found. Defaulting to CLI.")
