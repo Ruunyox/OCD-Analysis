@@ -58,6 +58,7 @@ class ocd_spec:
 			self.wl = np.flipud(np.array(self.data[:,0]))
 			self.cd = np.flipud(np.array(self.data[:,1]))
 			self.name = fn
+			self.dw = self.wl[0]-self.wl[1]
 		if fn is None:
 			self.data = np.array([[]])
 			self.wl = np.array([])
@@ -65,12 +66,38 @@ class ocd_spec:
 			self.name = "empty spectrum"
 
 	def graph(self):
+		axis_y = np.zeros(len(self.wl))
 		fig = plt.figure("CD Spectrum")
 		plt.plot(self.wl, self.cd, 'k')
+		plt.plot(self.wl, axis_y, 'k:')
 		plt.ylabel("CD [mdeg]")
 		plt.xlabel("Wavelength [nm]")
+		plt.title(self.name)
 		plt.show()
 
+	def trim(self,wl1,wl2):
+		w_arr = np.array([wl1,wl2])
+		if wl1>wl2:
+			w_arr = np.flipud(w_arr)
+		new_ocd_spec = ocd_spec()
+		idx1, = np.where(self.wl == wl1)
+		idx2, = np.where(self.wl == wl2)
+		new_wl = self.wl[int(idx1):int(idx2)]
+		new_ocd_spec.wl = new_wl
+		new_ocd_spec.cd = self.cd[int(idx1):int(idx2)]
+		new_ocd_spec.dw = self.dw
+		new_ocd_spec.name = self.name +" ["+str(wl1)+":"+str(wl2)+"]"
+		return new_ocd_spec
+
+	def rm_baseline(self,constant,type="constant"):
+		new_ocd_spec = ocd_spec()
+		baseline = constant*np.ones(len(self.wl))
+		new_ocd_spec.cd = self.cd - baseline
+		new_ocd_spec.wl = self.wl
+		new_ocd_spec.name = self.name +" [Baseline Corrected]"
+		new_ocd_spec.dw = self.dw
+		return new_ocd_spec
+		
 def avg_signal(specs):
 	'''input is array of ocd_spec'''
 	cd = np.zeros(len(specs[0].cd))
@@ -85,6 +112,8 @@ def avg_signal(specs):
 
 def mult_graph(specs,types=None,colors=None,widths=None,title=None):
 	fig = plt.figure("Composite Plot")
+	axis_y = np.zeros(len(specs[0].wl))
+	plt.plot(specs[0].wl,axis_y,'k:')
 	plt.title(title)
 	plt.xlabel("Wavelength [nm]")
 	plt.ylabel("CD [mdeg]")
