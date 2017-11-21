@@ -12,6 +12,18 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import sys
 import os
+from scipy.signal import *
+
+def smooth(x,beta):
+    """ kaiser window smoothing """
+    window_len=41              #Needs to be odd for proper response
+                               # extending the data at beginning and at the end
+                               # to apply the window at the borders
+    s = np.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]] #start:stop:step
+    w = np.kaiser(window_len,beta)
+    y = np.convolve(w/w.sum(),s,mode='valid')
+    return y[20:len(y)-20]
+    
 
 class ocd_spec:
 	def renorm(self,scale_factor):
@@ -89,15 +101,42 @@ class ocd_spec:
 		new_ocd_spec.name = self.name +" ["+str(wl1)+":"+str(wl2)+"]"
 		return new_ocd_spec
 
-	def rm_baseline(self,constant,type="constant"):
+	def rm_baseline(self,constant,type="constant",plot=False):
 		new_ocd_spec = ocd_spec()
 		baseline = constant*np.ones(len(self.wl))
 		new_ocd_spec.cd = self.cd - baseline
 		new_ocd_spec.wl = self.wl
 		new_ocd_spec.name = self.name +" [Baseline Corrected]"
 		new_ocd_spec.dw = self.dw
+		if plot != False:
+			fig = plt.figure("Baseline Correction")
+			plt.plot(self.wl,self.cd,'k:')
+			plt.plot(new_ocd_spec.wl,new_ocd_spec.cd,'k')
+			plt.plot(self.wl,np.zeros(len(self.wl)),'k:')
+			plt.title("Baseline Correction")
+			plt.ylabel("CD [mdeg]")
+			plt.xlabel("Wavelength [nm]")
+			plt.legend([self.name,new_ocd_spec.name],loc='best')
+			plt.show()
 		return new_ocd_spec
-		
+
+	def filter(self,type="kaiser",beta=2.0,plot=True):
+		new_ocd_spec = ocd_spec()
+		new_ocd_spec.name = self.name + "[Filtered]"
+		new_ocd_spec.wl = self.wl
+		new_ocd_spec.dw = self.dw
+		new_ocd_spec.cd = smooth(self.cd,1)
+		fig = plt.figure("Filtered Signal")
+		plt.title("Filtered Signal")
+		plt.ylabel("CD [mdeg]")
+		plt.xlabel("Wavelength [nm]")
+		plt.plot(self.wl,self.cd,color='salmon',linewidth=4)
+		plt.plot(new_ocd_spec.wl,new_ocd_spec.cd,'k')
+		plt.plot(self.wl,np.zeros(len(self.wl)),'k:')
+		plt.legend([self.name,new_ocd_spec.name],loc='best')
+		plt.show()			
+		return new_ocd_spec
+			
 def avg_signal(specs):
 	'''input is array of ocd_spec'''
 	cd = np.zeros(len(specs[0].cd))
@@ -108,7 +147,7 @@ def avg_signal(specs):
 	avg = ocd_spec()
 	avg.cd = cd
 	avg.wl = specs[0].wl
-	return avg
+	return avg 
 
 def mult_graph(specs,types=None,colors=None,widths=None,title=None):
 	fig = plt.figure("Composite Plot")
