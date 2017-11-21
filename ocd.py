@@ -12,9 +12,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import sys
 import os
-from scipy.signal import *
 
-def smooth(x,beta):
+def kaiser_smooth(x,beta):
     """ kaiser window smoothing """
     window_len=41              #Needs to be odd for proper response
                                # extending the data at beginning and at the end
@@ -125,7 +124,7 @@ class ocd_spec:
 		new_ocd_spec.name = self.name + "[Filtered]"
 		new_ocd_spec.wl = self.wl
 		new_ocd_spec.dw = self.dw
-		new_ocd_spec.cd = smooth(self.cd,1)
+		new_ocd_spec.cd = kaiser_smooth(self.cd,1)
 		fig = plt.figure("Filtered Signal")
 		plt.title("Filtered Signal")
 		plt.ylabel("CD [mdeg]")
