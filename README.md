@@ -7,7 +7,7 @@ Function and class documentation are included in PDF form.
 ## Dependencies
 
 #### Linux/OSX:
-* curses >> terminal-based file selection
+* curses   >> terminal-based file selection
 * pydialog >> terminal-based file selection
 * numpy
 
