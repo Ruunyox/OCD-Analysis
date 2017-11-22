@@ -26,7 +26,12 @@ def kaiser_smooth(x,beta):
 
 class ocd_spec:
 	def renorm(self,scale_factor):
-		self.cd = scale_factor*self.cd
+		new_ocd_spec = ocd.spec()
+		new_ocd_spec.wl = self.wl
+		new_ocd_spec.dw = self.dw
+		new_ocd_spec.name = self.name + "[Rescaled]"
+		new_ocd_spec.cd = scale_factor*self.cd
+		return new_ocd_spec
 
 	def load(self,fn):
 		'''Specific to J810 ASCII'''
@@ -75,6 +80,7 @@ class ocd_spec:
 			self.wl = np.array([])
 			self.cd = np.array([])
 			self.name = "empty spectrum"
+			self.dw = None
 
 	def graph(self):
 		axis_y = np.zeros(len(self.wl))
@@ -93,7 +99,7 @@ class ocd_spec:
 		new_ocd_spec = ocd_spec()
 		idx1, = np.where(self.wl == wl1)
 		idx2, = np.where(self.wl == wl2)
-		new_wl = self.wl[int(idx1):int(idx2)]
+		new_wl = self.wl[int(idx1):int(idx2)+1]
 		new_ocd_spec.wl = new_wl
 		new_ocd_spec.cd = self.cd[int(idx1):int(idx2)]
 		new_ocd_spec.dw = self.dw
@@ -133,6 +139,8 @@ class ocd_spec:
 		plt.plot(new_ocd_spec.wl,new_ocd_spec.cd,'k')
 		plt.plot(self.wl,np.zeros(len(self.wl)),'k:')
 		plt.legend([self.name,new_ocd_spec.name],loc='best')
+		axis_y = np.zeros(len(self.wl))
+		plt.plot(self.wl,axis_y,'k:')
 		plt.show()			
 		return new_ocd_spec
 			
@@ -146,9 +154,11 @@ def avg_signal(specs):
 	avg = ocd_spec()
 	avg.cd = cd
 	avg.wl = specs[0].wl
+	avg.dw = specs[0].dw
 	return avg 
 
-def mult_graph(specs,types=None,colors=None,widths=None,title=None):
+def
+mult_graph(specs,types=None,colors=None,widths=None,title=None,verts=None):
 	fig = plt.figure("Composite Plot")
 	axis_y = np.zeros(len(specs[0].wl))
 	plt.title(title)
@@ -160,24 +170,23 @@ def mult_graph(specs,types=None,colors=None,widths=None,title=None):
 			plt.plot(i.wl,i.cd,j)
 			names.append(i.name)
 		plt.legend(names,loc="best")
-		plt.plot(specs[0].wl,axis_y,'k:')
-		plt.show()
 	if types != None and colors != None:
 		names=[]
 		for i,j,k in zip(specs,types,colors):
 			plt.plot(i.wl,i.cd,j,color=k)
 			names.append(i.name)
 		plt.legend(names,loc="best")
-		plt.plot(specs[0].wl,axis_y,'k:')
-		plt.show()
 	if types == None and colors == None:
 		names=[]
 		for i in specs:
 			plt.plot(i.wl,i.cd)
 			names.append(i.name)
 		plt.legend(names,loc="best")
-		plt.plot(specs[0].wl,axis_y,'k:')
-		plt.show()
+	if verts != None:
+		for i in range(len(verts)):
+			plt.axvline(x=verts[i],'k')
+	plt.plot(specs[0].wl,axis_y,'k:')
+	plt.show()	
 		
 def graph_series(specs,title=None,cmap=mpl.cm.Reds):
 	fig = plt.figure("Series Plot")
