@@ -151,7 +151,6 @@ def avg_signal(specs):
 def mult_graph(specs,types=None,colors=None,widths=None,title=None):
 	fig = plt.figure("Composite Plot")
 	axis_y = np.zeros(len(specs[0].wl))
-	plt.plot(specs[0].wl,axis_y,'k:')
 	plt.title(title)
 	plt.xlabel("Wavelength [nm]")
 	plt.ylabel("CD [mdeg]")
@@ -161,6 +160,7 @@ def mult_graph(specs,types=None,colors=None,widths=None,title=None):
 			plt.plot(i.wl,i.cd,j)
 			names.append(i.name)
 		plt.legend(names,loc="best")
+		plt.plot(specs[0].wl,axis_y,'k:')
 		plt.show()
 	if types != None and colors != None:
 		names=[]
@@ -168,6 +168,7 @@ def mult_graph(specs,types=None,colors=None,widths=None,title=None):
 			plt.plot(i.wl,i.cd,j,color=k)
 			names.append(i.name)
 		plt.legend(names,loc="best")
+		plt.plot(specs[0].wl,axis_y,'k:')
 		plt.show()
 	if types == None and colors == None:
 		names=[]
@@ -175,6 +176,7 @@ def mult_graph(specs,types=None,colors=None,widths=None,title=None):
 			plt.plot(i.wl,i.cd)
 			names.append(i.name)
 		plt.legend(names,loc="best")
+		plt.plot(specs[0].wl,axis_y,'k:')
 		plt.show()
 		
 def graph_series(specs,title=None,cmap=mpl.cm.Reds):
