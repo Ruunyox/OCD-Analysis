@@ -54,6 +54,7 @@ class ocd_spec:
 			cd = np.append(cd,i-j)
 		new_ocd_spec.cd = cd
 		new_ocd_spec.wl = self.wl
+		return new_ocd_spec 
 
 	def __rsub__(self,other):
 		if other == 0:
@@ -101,7 +102,7 @@ class ocd_spec:
 		idx2, = np.where(self.wl == wl2)
 		new_wl = self.wl[int(idx1):int(idx2)+1]
 		new_ocd_spec.wl = new_wl
-		new_ocd_spec.cd = self.cd[int(idx1):int(idx2)]
+		new_ocd_spec.cd = self.cd[int(idx1):int(idx2)+1]
 		new_ocd_spec.dw = self.dw
 		new_ocd_spec.name = self.name +" ["+str(wl1)+":"+str(wl2)+"]"
 		return new_ocd_spec
@@ -143,7 +144,19 @@ class ocd_spec:
 		plt.plot(self.wl,axis_y,'k:')
 		plt.show()			
 		return new_ocd_spec
-			
+
+def load_files(filelist):
+	names = []
+	speclist = []
+	for i in range(len(filelist)):
+		print("(Formal) name of scan "+str(i+1))
+		name = input()
+		names.append(name)
+	for i in range(len(filelist)):
+		speclist.append(ocd_spec(filelist[i]))
+		speclist[i].name = names[i]
+	return speclist	
+	
 def avg_signal(specs):
 	'''input is array of ocd_spec'''
 	cd = np.zeros(len(specs[0].cd))
@@ -157,8 +170,7 @@ def avg_signal(specs):
 	avg.dw = specs[0].dw
 	return avg 
 
-def
-mult_graph(specs,types=None,colors=None,widths=None,title=None,verts=None):
+def mult_graph(specs,types=None,colors=None,widths=None,title=None,verts=None):
 	fig = plt.figure("Composite Plot")
 	axis_y = np.zeros(len(specs[0].wl))
 	plt.title(title)
@@ -184,7 +196,7 @@ mult_graph(specs,types=None,colors=None,widths=None,title=None,verts=None):
 		plt.legend(names,loc="best")
 	if verts != None:
 		for i in range(len(verts)):
-			plt.axvline(x=verts[i],'k')
+			plt.axvline(x=verts[i])
 	plt.plot(specs[0].wl,axis_y,'k:')
 	plt.show()	
 		
