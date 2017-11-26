@@ -246,4 +246,10 @@ or sys.platform == "linux2":
 			return ocd_spec(path)
 	except:
 		print("Dialog module not found. Defaulting to CLI.")
-		
+	try:
+		from fileclaw import *
+	except:
+		print("Fileclaw module not found.")
+
+
+	
