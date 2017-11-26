@@ -2,7 +2,7 @@
 ---
 
 <p align="center">
-<img src="J810_scaled.png">
+<img src="J810_scaled.png" width="50%" height="50%">
 </p>
 
 These tools were developed to analyze oriented circular
