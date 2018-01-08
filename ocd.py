@@ -26,7 +26,7 @@ def kaiser_smooth(x,beta):
 
 class ocd_spec:
 	def renorm(self,scale_factor):
-		new_ocd_spec = ocd.spec()
+		new_ocd_spec = ocd_spec()
 		new_ocd_spec.wl = self.wl
 		new_ocd_spec.dw = self.dw
 		new_ocd_spec.name = self.name + "[Rescaled]"
@@ -35,8 +35,20 @@ class ocd_spec:
 
 	def load(self,fn):
 		'''Specific to J810 ASCII'''
-		data = np.loadtxt(fn,dtype=float,skiprows=19,usecols=(0,1,2))
+		data = np.loadtxt(fn,dtype=float,skiprows=19,usecols=(0,1))
 		return data
+
+	def save(self,fn):
+		'''For future loading'''
+		savefile = open(fn,"w+")
+		savefile.write(self.name+"\n")
+		'''Mimic JASCO Header'''
+		for i in range(18):
+			savefile.write("* * * * * * * * * *\n")
+		'''Write wl and cd values'''
+		for i in range(len(self.wl)):
+			savefile.write("{}\t{}\n".format(self.wl[i],self.cd[i]))
+		savefile.close()
 
 	def __add__(self,new):
 		new_ocd_spec = ocd_spec()
@@ -144,19 +156,7 @@ class ocd_spec:
 		plt.plot(self.wl,axis_y,'k:')
 		plt.show()			
 		return new_ocd_spec
-
-def load_files(filelist):
-	names = []
-	speclist = []
-	for i in range(len(filelist)):
-		print("(Formal) name of scan "+str(i+1))
-		name = input()
-		names.append(name)
-	for i in range(len(filelist)):
-		speclist.append(ocd_spec(filelist[i]))
-		speclist[i].name = names[i]
-	return speclist	
-	
+			
 def avg_signal(specs):
 	'''input is array of ocd_spec'''
 	cd = np.zeros(len(specs[0].cd))
@@ -246,10 +246,4 @@ or sys.platform == "linux2":
 			return ocd_spec(path)
 	except:
 		print("Dialog module not found. Defaulting to CLI.")
-	try:
-		from fileclaw import *
-	except:
-		print("Fileclaw module not found.")
-
-
-	
+		
