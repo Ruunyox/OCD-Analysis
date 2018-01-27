@@ -170,7 +170,9 @@ def avg_signal(specs):
 	avg.dw = specs[0].dw
 	return avg 
 
-def mult_graph(specs,types=None,colors=None,widths=None,title=None,verts=None):
+def mult_graph(specs,types=None,colors=None,linewidths=None,title=None,verts=None,xlim=None):
+	if linewidths == None:
+		linewidths = [1]*len(specs)
 	fig = plt.figure("Composite Plot")
 	axis_y = np.zeros(len(specs[0].wl))
 	plt.title(title)
@@ -178,26 +180,28 @@ def mult_graph(specs,types=None,colors=None,widths=None,title=None,verts=None):
 	plt.ylabel("CD [mdeg]")
 	if types != None and colors == None:
 		names=[]
-		for i,j in zip(specs,types):
-			plt.plot(i.wl,i.cd,j)
+		for i,j,k in zip(specs,types,linewidths):
+			plt.plot(i.wl,i.cd,j,linewidth=k)
 			names.append(i.name)
 		plt.legend(names,loc="best")
 	if types != None and colors != None:
 		names=[]
-		for i,j,k in zip(specs,types,colors):
-			plt.plot(i.wl,i.cd,j,color=k)
+		for i,j,k,l in zip(specs,types,colors,linewidths):
+			plt.plot(i.wl,i.cd,j,color=k,linewidth=k)
 			names.append(i.name)
 		plt.legend(names,loc="best")
 	if types == None and colors == None:
 		names=[]
-		for i in specs:
-			plt.plot(i.wl,i.cd)
-			names.append(i.name)
+		for i in range(len(specs)):
+			plt.plot(specs[i].wl,specs[i].cd,linewidth=linewidths[i])
+			names.append(specs[i].name)
 		plt.legend(names,loc="best")
 	if verts != None:
 		for i in range(len(verts)):
 			plt.axvline(x=verts[i])
 	plt.plot(specs[0].wl,axis_y,'k:')
+	if xlim != None and len(xlim) == 2:
+		plt.xlim(xlim[0],xlim[1])
 	plt.show()	
 		
 def graph_series(specs,title=None,cmap=mpl.cm.Reds):
@@ -218,14 +222,40 @@ if sys.platform == "win32":
 
 		def fs():
 			app = wx.App(None)
-			style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
+			style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_MULTIPLE
 			dialog = wx.FileDialog(None, 'Open',wildcard='*.txt',style=style)
+			mult = None
 			if dialog.ShowModal() == wx.ID_OK:
-				path = dialog.GetPath()
+				try:
+					paths = dialog.GetPath()
+					mult = False
+				except:
+					paths = dialog.GetPaths()
+					mult = True
 			else:
-				path = None
+				paths = None
 			dialog.Destroy()
-			return ocd_spec(path)
+			if mult == False:
+				return ocd_spec(paths[0])
+			if mult == True:
+				specs =[]
+				for i in paths:
+					specs.append(ocd_spec(i))
+				return specs
+
+		def mfs():
+			app = wx.App(None)
+			style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_MULTIPLE
+			dialog = wx.FileDialog(None,'Open',wildcard='*.txt',style=style)
+			if dialog.ShowModal() == wx.ID_OK:
+				paths = dialog.GetPaths()
+			else:
+				paths =None
+			dialog.Destroy()
+			specs = []
+			for i in paths:
+				specs.append(ocd_spec(i))
+			return specs
 
 	except:
 		print("WX module not found. Defaulting to CLI.")
@@ -235,15 +265,27 @@ or sys.platform == "linux2":
 	try:
 		from dialog import Dialog
 		dlg = Dialog(dialog="dialog")
+		rows, cols = os.popen("stty size","r").read().split()
+		rows = int(rows); cols = int(cols)
 		
 		def fs():
-			rows, cols = os.popen("stty size","r").read().split()
-			rows = int(rows); cols = int(cols)
 			path = './'
 			code, path = dlg.fselect('./',rows-30,cols-30,title="Select File")
 			os.system("clear")
 			print(path + " loaded.")
 			return ocd_spec(path)
+	
+		def mfs ():
+			path = './'
+			entries = os.listdir(path)
+			tagtuples = []
+			for i in entries:
+				tagtuples.append((i,i,"off"))
+			code, paths = dlg.checklist("Select Files",rows-10,cols-10,rows-14,tagtuples)	
+			specs=[]
+			for i in paths:
+				specs.append(ocd_spec(i))
+			return specs
 	except:
 		print("Dialog module not found. Defaulting to CLI.")
 		
