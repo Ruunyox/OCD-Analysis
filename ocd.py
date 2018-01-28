@@ -7,11 +7,13 @@
  ┌┤   charron.nicholas.e@gmail.com   ├┐
  └┴──────────────────────────────────┴┘
 '''
-import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import sys
 import os
+import numpy as np
+import matplotlib as mpl
+if sys.platform == 'darwin':
+	mpl.use('TkAgg')
+import matplotlib.pyplot as plt
 
 def kaiser_smooth(x,beta):
     """ kaiser window smoothing """
@@ -138,7 +140,7 @@ class ocd_spec:
 			plt.show()
 		return new_ocd_spec
 
-	def filter(self,type="kaiser",beta=2.0,plot=True):
+	def filter(self,type="kaiser",beta=2.0,plot=True,lwidths=[1,1]):
 		new_ocd_spec = ocd_spec()
 		new_ocd_spec.name = self.name + "[Filtered]"
 		new_ocd_spec.wl = self.wl
@@ -148,8 +150,8 @@ class ocd_spec:
 		plt.title("Filtered Signal")
 		plt.ylabel("CD [mdeg]")
 		plt.xlabel("Wavelength [nm]")
-		plt.plot(self.wl,self.cd,color='salmon',linewidth=4)
-		plt.plot(new_ocd_spec.wl,new_ocd_spec.cd,'k')
+		plt.plot(self.wl,self.cd,color='salmon',linewidth=lwidths[1])
+		plt.plot(new_ocd_spec.wl,new_ocd_spec.cd,'k',linewidth=lwidths[0])
 		plt.plot(self.wl,np.zeros(len(self.wl)),'k:')
 		plt.legend([self.name,new_ocd_spec.name],loc='best')
 		axis_y = np.zeros(len(self.wl))
@@ -170,9 +172,9 @@ def avg_signal(specs):
 	avg.dw = specs[0].dw
 	return avg 
 
-def mult_graph(specs,types=None,colors=None,linewidths=None,title=None,verts=None,xlim=None):
-	if linewidths == None:
-		linewidths = [1]*len(specs)
+def mult_graph(specs,types=None,colors=None,lwidths=None,title=None,verts=None,xlim=None):
+	if lwidths == None:
+		lwidths = [1]*len(specs)
 	fig = plt.figure("Composite Plot")
 	axis_y = np.zeros(len(specs[0].wl))
 	plt.title(title)
@@ -180,20 +182,20 @@ def mult_graph(specs,types=None,colors=None,linewidths=None,title=None,verts=Non
 	plt.ylabel("CD [mdeg]")
 	if types != None and colors == None:
 		names=[]
-		for i,j,k in zip(specs,types,linewidths):
+		for i,j,k in zip(specs,types,lwidths):
 			plt.plot(i.wl,i.cd,j,linewidth=k)
 			names.append(i.name)
 		plt.legend(names,loc="best")
 	if types != None and colors != None:
 		names=[]
-		for i,j,k,l in zip(specs,types,colors,linewidths):
+		for i,j,k,l in zip(specs,types,colors,lwidths):
 			plt.plot(i.wl,i.cd,j,color=k,linewidth=k)
 			names.append(i.name)
 		plt.legend(names,loc="best")
 	if types == None and colors == None:
 		names=[]
 		for i in range(len(specs)):
-			plt.plot(specs[i].wl,specs[i].cd,linewidth=linewidths[i])
+			plt.plot(specs[i].wl,specs[i].cd,linewidth=lwidths[i])
 			names.append(specs[i].name)
 		plt.legend(names,loc="best")
 	if verts != None:
@@ -270,22 +272,21 @@ or sys.platform == "linux2":
 		
 		def fs():
 			path = './'
-			code, path = dlg.fselect('./',rows-30,cols-30,title="Select File")
-			os.system("clear")
-			print(path + " loaded.")
-			return ocd_spec(path)
-	
-		def mfs ():
-			path = './'
 			entries = os.listdir(path)
 			tagtuples = []
 			for i in entries:
 				tagtuples.append((i,i,"off"))
-			code, paths = dlg.checklist("Select Files",rows-10,cols-10,rows-14,tagtuples)	
-			specs=[]
-			for i in paths:
-				specs.append(ocd_spec(i))
-			return specs
+			code, paths = dlg.buildlist("Select Files",rows-10,cols-10,rows-14,tagtuples)
+			if code == Dialog.OK:
+				if len(paths) == 1:
+					return ocd_spec(paths[0])
+				else:	
+					specs=[]
+					for i in paths:
+						specs.append(ocd_spec(i))
+					return specs
+			if code == Dialog.CANCEL:
+				return None
 	except:
 		print("Dialog module not found. Defaulting to CLI.")
 		
