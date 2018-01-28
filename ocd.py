@@ -206,16 +206,20 @@ def mult_graph(specs,types=None,colors=None,lwidths=None,title=None,verts=None,x
 		plt.xlim(xlim[0],xlim[1])
 	plt.show()	
 		
-def graph_series(specs,title=None,cmap=mpl.cm.Reds):
+def graph_series(specs,title=None,cmap=mpl.cm.Reds,lwidths=None,xlim=None):
+	if lwidths == None:
+		lwidths = [1]*len(specs)
 	fig = plt.figure("Series Plot")
 	plt.title(title)
 	plt.xlabel("Wavelength [nm]")
 	plt.ylabel("CD [mdeg]")
 	names=[]
 	for i in range(len(specs)):
-		plt.plot(specs[i].wl,specs[i].cd,color=cmap((i+1)*1./len(specs)))
+		plt.plot(specs[i].wl,specs[i].cd,color=cmap((i+1)*1./len(specs)), linewidth=lwidths[i])
 		names.append(specs[i].name)
 	plt.legend(names,loc="best")
+	if xlim != None and len(xlim) == 2:
+		plt.xlim(xlim[0],xlim[1])
 	plt.show()
 
 if sys.platform == "win32":
